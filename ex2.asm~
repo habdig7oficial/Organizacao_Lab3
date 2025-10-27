@@ -1,0 +1,56 @@
+.data
+
+array: .word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 # array
+array_len: .word 10 # array len
+
+.text
+
+
+la $s0, array # ptr array[0]
+lw $t6, array_len # len array
+move $t0, $s0 # ptr array[i]
+
+# Calc initial offset
+subi $t5, $t6, 1
+li $t4, 4
+mul $t5, $t5, $t4
+add $t0, $t0, $t5
+
+jal alloc_node
+
+#print mode
+li $v0, 1
+
+loop:
+beq $t6, $zero, end_loop
+
+lw $t5, 0($t0)
+
+andi $a0, $t5, 1 # 0 is par, 1 is impar
+
+beq $a0, $zero, par
+
+par:
+
+syscall
+
+subi $t6, $t6, 1 # i--
+subi $t0, $t0, 4 # word size
+
+j loop
+end_loop:
+
+exit:
+li $v0, 10
+syscall
+
+alloc_node:
+li $v0, 9
+li $a0, 5
+syscall
+move $s1, $v0
+jr $ra
+
+print_par:
+
+print_impar:
