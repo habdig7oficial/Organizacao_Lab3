@@ -28,13 +28,17 @@ lw $t5, 0($t0)
 
 andi $s5, $t5, 1 # 0 is par, 1 is impar
 
+move $s6, $t5
+jal alloc_node
 
 beq $s5, $zero, par
 	# number is impar	
-	move $s6, $t5
-	jal alloc_node
 	move $s7, $s1
+	j continue
 par:
+	# number is par
+	move $s4, $s2
+continue:
 
 move $a0, $s5
 
@@ -57,11 +61,22 @@ move $t3, $v0 # save a copy of $v0 in $t3
 li $v0, 9
 li $a0, 8
 syscall
-move $s1, $v0
 
-# Copy value to location
-sw $s6, 0($s1)
-sw $s7, 4($s1)
+
+beq $s5, $zero, head_is_par
+	# head is impar
+	# Copy value to location
+	move $s1, $v0
+	sw $s6, 0($s1)
+	
+	sw $s7, 4($s1)
+	j continue2
+head_is_par:
+	move $s2, $v0
+	sw $s6, 0($s2)
+	
+	sw $s4, 4($s2)	
+continue2:
 
 move $v0, $t3 # Write Back
 
