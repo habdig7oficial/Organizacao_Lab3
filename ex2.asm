@@ -3,6 +3,15 @@
 array: .word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 # array
 array_len: .word 10 # array len
 
+impar_msg: .ascii "\nThe impar numbers are: \n\0"
+par_msg: .ascii "\nThe par numbers are: \n\0"
+
+# Dummy strings for printing
+endl: .ascii "\n\0"
+separator: .ascii  " - \0"
+
+mem_addr:  .ascii " (list memory adress)\0"
+	
 .text
 
 
@@ -21,15 +30,16 @@ add $t0, $t0, $t5
 #print mode
 li $v0, 1
 
+# Loop Backwards
 loop:
 beq $t6, $zero, end_loop
 
-lw $t5, 0($t0)
+lw $t5, 0($t0) # Load array addr
 
-andi $s5, $t5, 1 # 0 is par, 1 is impar
+andi $s5, $t5, 1 # Check parity: 0 is par, 1 is impar
 
 move $s6, $t5
-jal alloc_node
+jal alloc_node  # Alloc a node in the linked list
 
 beq $s5, $zero, par
 	# number is impar	
@@ -40,8 +50,7 @@ par:
 	move $s4, $s2
 continue:
 
-move $a0, $s5
-
+move $a0, $s5 # move and print
 syscall
 
 subi $t6, $t6, 1 # i--
@@ -49,6 +58,18 @@ subi $t0, $t0, 4 # word size
 
 j loop
 end_loop:
+
+# print impar msg
+li $v0, 4
+la $a0, impar_msg
+syscall
+
+# print par msg
+la $a0, par_msg
+syscall
+
+li $v0, 1
+j print_par
 
 exit:
 li $v0, 10
@@ -84,4 +105,54 @@ jr $ra
 
 print_par:
 
+	bne $s4, $zero, continue_par_print
+		j exit
+	continue_par_print:
+	
+	lw $a0, ($s4)
+	syscall
+	
+	jal separator_routine
+	
+	lw $t3, 4($s4)
+	move $s4, $t3
+	
+	move $a0, $s4
+	syscall
+	
+	jal mem_addr_routine
+	
+	jal endl_routine
+	
+	
+	j print_par
+	
 print_impar:
+	
+	
+endl_routine:
+	move $t1, $v0
+	li $v0, 4
+	la $a0, endl
+	syscall
+	move $v0, $t1
+	jr $ra
+	
+separator_routine:
+	move $t1, $v0
+	li $v0, 4
+	la $a0, separator
+	syscall
+	move $v0, $t1
+	jr $ra
+	
+	
+mem_addr_routine:
+	move $t1, $v0
+	li $v0, 4
+	la $a0, mem_addr
+	syscall
+	move $v0, $t1
+	jr $ra
+
+
