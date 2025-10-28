@@ -68,9 +68,11 @@ syscall
 la $a0, par_msg
 syscall
 
+# call function
 li $v0, 1
 j print_par
 
+# exit with syscall 10
 exit:
 li $v0, 10
 syscall
@@ -83,6 +85,8 @@ li $v0, 9
 li $a0, 8
 syscall
 
+# Make 2 pointer: $s7 is for par and $s7 for impar
+# Macht 2 pointer: $s7 ist für Gerade und $s7 Ungerade
 
 beq $s5, $zero, head_is_par
 	# head is impar
@@ -104,22 +108,25 @@ move $v0, $t3 # Write Back
 jr $ra
 
 print_par:
-
 	bne $s4, $zero, continue_par_print
-		j exit
+		j exit # When next pointer is NULL exit
 	continue_par_print:
 	
+	# Load Next element by address and print
 	lw $a0, ($s4)
 	syscall
 	
 	jal separator_routine
 	
+	# Get next pointer: that is +4 adress ahead in the allocated area because $s4 points to next value
 	lw $t3, 4($s4)
 	move $s4, $t3
 	
+	# Print memory adress
 	move $a0, $s4
 	syscall
 	
+	# Format string
 	jal mem_addr_routine
 	
 	jal endl_routine
@@ -129,7 +136,7 @@ print_par:
 	
 print_impar:
 	
-	
+# Simple print routines that don't alter $v0 value	
 endl_routine:
 	move $t1, $v0
 	li $v0, 4
