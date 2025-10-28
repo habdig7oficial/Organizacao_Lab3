@@ -59,18 +59,25 @@ subi $t0, $t0, 4 # word size
 j loop
 end_loop:
 
-# print impar msg
-li $v0, 4
-la $a0, impar_msg
-syscall
-
 # print par msg
 la $a0, par_msg
 syscall
 
 # call function
 li $v0, 1
-j print_par
+jal print_par
+
+raus_par_label:
+
+# print impar msg
+li $v0, 4
+la $a0, impar_msg
+syscall
+
+# call function
+li $v0, 1
+jal print_impar
+
 
 # exit with syscall 10
 exit:
@@ -109,7 +116,7 @@ jr $ra
 
 print_par:
 	bne $s4, $zero, continue_par_print
-		j exit # When next pointer is NULL exit
+		j raus_par_label # When next pointer is NULL exit
 	continue_par_print:
 	
 	# Load Next element by address and print
@@ -131,10 +138,33 @@ print_par:
 	
 	jal endl_routine
 	
-	
 	j print_par
 	
 print_impar:
+	bne $s7, $zero, continue_impar_print
+		j exit # When next pointer is NULL exit
+	continue_impar_print:
+	
+	# Load Next element by address and print
+	lw $a0, ($s7)
+	syscall
+	
+	jal separator_routine
+	
+	# Get next pointer: that is +4 adress ahead in the allocated area because $s4 points to next value
+	lw $t3, 4($s7)
+	move $s7, $t3
+	
+	# Print memory adress
+	move $a0, $s7
+	syscall
+	
+	# Format string
+	jal mem_addr_routine
+	
+	jal endl_routine
+	
+	j print_impar
 	
 # Simple print routines that don't alter $v0 value	
 endl_routine:
